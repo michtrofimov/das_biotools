@@ -127,3 +127,67 @@ def is_acceptable_quality_score(seq: str, quality_threshold: int) -> bool:
     res = read_quality_score >= quality_threshold
 
     return res
+
+
+def fastq_filter(
+    seqs: dict,
+    gc_bounds: tuple = (0, 100),
+    length_bounds: tuple = (0, 2**32),
+    quality_threshold: int = 0,
+) -> dict:
+    """
+    Filter a dictionary of sequences based on specified criteria.
+
+    Parameters:
+    - seqs (dict): dictionary where keys are sequence identifiers and values are tuples containing sequence and quality scores
+    - gc_bounds (tuple): tuple with lower and upper bounds for GC content
+    - length_bounds (tuple): tuple with lower and upper bounds for sequence length
+    - quality_threshold (int): minimum acceptable quality score
+
+    Returns:
+    - dict: filtered dictionary containing only the sequences that meet the specified criteria
+    """
+
+    # Check value of gc_bounds parameter
+    if type(gc_bounds) == int:
+        gc_bounds = (0, gc_bounds)
+
+    elif len(gc_bounds) == 1:
+        gc_bounds = (0, gc_bounds[0])
+
+    elif len(gc_bounds) > 2:
+        print("Error! Invalid gc_bound value!")
+        return None
+
+    # Check value of length_bounds parameter
+    if type(length_bounds) == int:
+        length_bounds = (0, length_bounds)
+
+    elif len(length_bounds) == 1:
+        length_bounds = (0, length_bounds[0])
+
+    elif len(length_bounds) > 2:
+        print("Error! Invalid length_bounds value!")
+        return None
+
+    # Check quality_threshold parameter
+    if type(quality_threshold) != int:
+        print("Error! Input integer value!")
+        return None
+
+    reads_to_del = []
+
+    for read in seqs.keys():
+        seq = seqs[read][0]
+        quality = seqs[read][1]
+
+        if (
+            (not is_acceptable_gc(seq, gc_bounds))
+            or (not is_acceptable_length(seq, length_bounds))
+            or (not is_acceptable_quality_score(quality, quality_threshold))
+        ):
+            reads_to_del.append(read)
+    for read in reads_to_del:
+        del seqs[read]
+
+    return seqs
