@@ -38,3 +38,23 @@ def is_acceptable_gc(seq: str, gc_bounds: tuple) -> bool:
     res = lower_threshold <= gc_content <= upper_threshold
 
     return res
+
+
+def is_acceptable_length(seq: str, length_bounds: tuple) -> bool:
+    """
+    Check if the length of a sequence falls within specified bounds.
+
+    Parameters:
+    - seq (str): A sequence.
+    - length_bounds (tuple): A tuple representing the lower and upper bounds for sequence length.
+
+    Returns:
+    - bool: True if the length is within bounds, False otherwise.
+    """
+
+    read_len = len(seq)
+    lower_threshold, upper_threshold = length_bounds
+
+    res = lower_threshold <= read_len <= upper_threshold
+
+    return res
