@@ -281,22 +281,22 @@ def translate_protein_rna(seq: str) -> str:
         raise ValueError("Sequence is not a protein, input should be a protein")
 
 
-def protein_tools(*args: str):
+def protein_tools(*args: any, procedure: str):
     """
-    Main function to perform various actions on protein sequences.
+    Main function to perform various procedures on protein sequences.
 
     Args:
-    - *args: Variable number of arguments. The first n-1 arguments should be protein sequences,
-             and the last argument should be a string specifying the action to be performed.
-
+    - *args: Variable number of arguments. The first one or two arguments should be protein sequences,
+             other arguments are auxiliary arguments.
+    - procedure (str):  A procedure to be performed
     Returns:
-    - The result of the specified action on the input protein sequences.
+    - The result of the specified procedure on the input protein sequences.
 
     Raises:
-    - ValueError: If the specified action is not supported or if there is an error in the number of sequences.
+    - ValueError: If the specified procedure is not supported or if there is an error in the number of sequences.
                   Also raised if the input sequences are not valid protein sequences.
 
-    Supported Actions:
+    Supported procedures:
     - "get_pI": Calculate isoelectric points for each amino acid in the sequence.
     - "needleman_wunsch": Perform global alignment of two sequences using the Needleman-Wunsch algorithm.
     - "build_scoring_matrix": Build a scoring matrix for amino acid pairs.
@@ -306,8 +306,7 @@ def protein_tools(*args: str):
     - "protein_mass": Calculate the molecular weight of the protein sequence.
     """
 
-    action = args[-1]
-    action_list = {
+    procedure_list = {
         "get_pI": get_pI,
         "needleman_wunsch": needleman_wunsch,
         "build_scoring_matrix": build_scoring_matrix,
@@ -317,21 +316,32 @@ def protein_tools(*args: str):
         "protein_mass": protein_mass,
     }
 
-    if action not in action_list:
-        raise ValueError(f"No such action: {action}")
+    # Check whether procedure is valid
+    if procedure not in procedure_list:
+        raise ValueError(f"No such action: {procedure}")
 
-    if not (
-        action == "needleman_wunsch"
-        and len(args) == 3
-        or action != "needleman_wunsch"
-        and len(args) == 2
+    # Check whether number of args for functions is valid
+    if not (procedure == "needleman_wunsch" and len(args) < 2):
+        raise ValueError("Error in number of sequences")
+    elif not (procedure == "get_pI" and len(args) > 3):
+        raise ValueError("Error in number of sequences")
+    elif not (
+        procedure != "needleman_wunsch" and procedure != "get_pI" and len(args) == 2
     ):
         raise ValueError("Error in number of sequences")
 
-    for sequence in args[:-1]:
-        if not set(sequence.upper()).issubset(set(AMINO_LETTERS)):
-            raise ValueError(f"The sequence is not protein sequence: {sequence}")
+    # Check whether query sequence is protein
+    if not (procedure == "needleman_wunsch"):
+        if not is_protein(args[0]):
+            raise ValueError(f"The sequence is not protein sequence: {args[0]}")
 
-    result = action_list[action](*args[:-1])
+        result = procedure_list[procedure](*args)
+        return result
+
+    else:
+        if not (is_protein(*args[0]) or is_protein(*args[1])):
+            raise ValueError(f"Sequences are not protein sequences")
+
+        result = procedure_list[procedure](*args)
 
     return result
