@@ -281,7 +281,7 @@ def translate_protein_rna(seq: str) -> str:
         raise ValueError("Sequence is not a protein, input should be a protein")
 
 
-def protein_tools(*args: any, **kwargs: any):
+def protein_tools(*args: any, **kwargs: any) -> any:
     """
     Main function to perform various procedures on protein sequences.
 

@@ -201,12 +201,13 @@ def reverse_complement(seq: str) -> str:
     return res
 
 
-def dna_rna_tools(*seqs: str) -> str:
+def dna_rna_tools(*seqs: str, procedure: str) -> str:
     """
     Perform DNA/RNA operations based on the specified procedure
 
     Parameters:
-    - *seqs (str): Variable number of DNA/RNA sequences, last element is a DNA/RNA processing procedure
+    - *seqs (str): Variable number of DNA/RNA sequences
+    - procedure (str): A DNA/RNA processing procedure
 
     Returns:
     - str: Result of the specified procedure on the sequences.
@@ -220,9 +221,6 @@ def dna_rna_tools(*seqs: str) -> str:
     Raises:
     - ValueError: If the specified procedure is not supported.
     """
-
-    # parse seqs list
-    *seqs, procedure = seqs
 
     # check whether a valid procedure
     check_if_procedure(procedure)
