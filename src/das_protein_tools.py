@@ -16,7 +16,7 @@ def is_protein(seq: str) -> bool:
     Output:
         returns True or False
     """
-    unique_chars = set(seq)
+    unique_chars = set(seq.upper())
     return unique_chars.issubset(AMINO_LETTERS)
 
 
@@ -281,14 +281,13 @@ def translate_protein_rna(seq: str) -> str:
         raise ValueError("Sequence is not a protein, input should be a protein")
 
 
-def protein_tools(*args: any, procedure: str):
+def protein_tools(*args: any, **kwargs: any):
     """
     Main function to perform various procedures on protein sequences.
 
     Args:
     - *args: Variable number of arguments. The first one or two arguments should be protein sequences,
-             other arguments are auxiliary arguments.
-    - procedure (str):  A procedure to be performed
+    - **kwargs:  Keyword argumets. First one is procedure, other are additional arguments for specific functions
     Returns:
     - The result of the specified procedure on the input protein sequences.
 
@@ -305,7 +304,7 @@ def protein_tools(*args: any, procedure: str):
     - "convert_to_3L_code": Convert one-letter amino acid sequence to three-letter coding.
     - "protein_mass": Calculate the molecular weight of the protein sequence.
     """
-
+    procedure = kwargs["procedure"]
     procedure_list = {
         "get_pI": get_pI,
         "needleman_wunsch": needleman_wunsch,
@@ -321,27 +320,30 @@ def protein_tools(*args: any, procedure: str):
         raise ValueError(f"No such action: {procedure}")
 
     # Check whether number of args for functions is valid
-    if not (procedure == "needleman_wunsch" and len(args) < 2):
+    if procedure == "needleman_wunsch" and len(args) < 2:
         raise ValueError("Error in number of sequences")
-    elif not (procedure == "get_pI" and len(args) > 3):
+    elif procedure == "get_pI" and len(args) > 3:
         raise ValueError("Error in number of sequences")
-    elif not (
-        procedure != "needleman_wunsch" and procedure != "get_pI" and len(args) == 2
-    ):
+    elif procedure != "needleman_wunsch" and procedure != "get_pI" and len(args) == 2:
         raise ValueError("Error in number of sequences")
 
-    # Check whether query sequence is protein
-    if not (procedure == "needleman_wunsch"):
+    # Check whether query sequence is protein if not, do procedure
+    if not (procedure == "needleman_wunsch" or procedure == "get_pI"):
         if not is_protein(args[0]):
-            raise ValueError(f"The sequence is not protein sequence: {args[0]}")
+            raise ValueError(f"The sequence is not a protein sequence: {args[0]}")
 
         result = procedure_list[procedure](*args)
         return result
 
     else:
-        if not (is_protein(*args[0]) or is_protein(*args[1])):
+        if not (is_protein(args[0]) or is_protein(args[1])):
             raise ValueError(f"Sequences are not protein sequences")
 
-        result = procedure_list[procedure](*args)
+        # Extract additional arguments
+        additional_args = {
+            key: value for key, value in kwargs.items() if key != "procedure"
+        }
+
+        result = procedure_list[procedure](*args, **additional_args)
 
     return result
