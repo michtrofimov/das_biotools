@@ -9,6 +9,8 @@ It is a python library which is able to perform several procedures on DNA/RNA, p
 
 # Features
 
+Tools for nucleotide sequences and aminoacids sequences support upper and lower cases.
+
 ## Tools for nucleotide sequences
 
 - `check_if_procedure(procedure: str) -> None`: Checks if the specified procedure is supported. Raises a ValueError if the procedure is not supported.
@@ -49,11 +51,16 @@ dna_rna_tools('ATCG', procedure='reverse_complement') -> "CGAT"
 
 - `is_protein(seq: str) -> bool`: Check if a given sequence is a valid protein sequence.
   
-- `get_pI(sequence: str, pI_values: dict = None) -> str`: Gives isoelectric point value for each aminoacid individually.
+- `get_pI(sequence: str, pI_values: dict = None) -> str`: Gives isoelectric point value for each aminoacid individually. User can pass their own pI values
 
 - `build_scoring_matrix(match_score: int, mismatch_score: int, amino_acid_alphabet: str = None) -> dict`: Auxiliary function for needleman_wunsch. Build a scoring matrix for amino acid pairs, which can be used in sequence alignment algorithms.
 
-- `needleman_wunsch(seq1: str, seq2: str) -> str`: Implement the Needleman-Wunsch algorithm for global sequence alignment of two amino acid sequences.
+- `needleman_wunsch(seq1: str,
+    seq2: str,
+    scoring_matrix: dict = None,
+    gap_penalty: int = -1,
+    match_score: int = 1,
+    mismatch_score: int = -1) -> str`: Implement the Needleman-Wunsch algorithm for global sequence alignment of two amino acid sequences.
 
 - `calculate_aa_freq(sequences: str) -> dict`: Calculate the frequences of aminoacids in protein sequences.
 
@@ -62,44 +69,47 @@ dna_rna_tools('ATCG', procedure='reverse_complement') -> "CGAT"
 - `protein_mass(seq: str) -> float`: Calculates molecular weight of the aminoacid sequence using monoisotopic masses.
 
 - `translate_protein_rna(seq: str) -> str`: Converts aminoacid sequence to RNA sequence. For those aminoacids that are coded with more than one codon, this function randomly chooses one codon from the set.
-- `protein_tools(*args: str) -> any`: Performs various actions on protein sequences. The supported procedures "get_pI", "needleman_wunsch", "build_scoring_matrix", "calculate_aa_freq", "translate_protein_rna", "convert_to_3L_code", "protein_mass".
+- `protein_tools(*args: any, **kwargs: any) -> any`: Performs various actions on protein sequences.
+    - *args: Variable number of arguments. The first one or two arguments should be protein sequences
+    - **kwargs:  Keyword argumets. First one is procedure, other are additional arguments for specific functions
+    - The supported procedures "get_pI", "needleman_wunsch", "build_scoring_matrix", "calculate_aa_freq", "translate_protein_rna", "convert_to_3L_code", "protein_mass"
 
 ### Usage
 
 - **get_pI**
 
 ```python
-protein_tools('RAAH', 'get_pI') -> "Sequence: RAAH. Isoelectric point of each aminoacid: [('R', 10.76), ('A', 6.0), ('H', 7.64)]"
+protein_tools('rh', pI_values = {'R' : 4,'H' : 3.5}, procedure='get_pI') -> "Sequence: rh. Isoelectric point of each aminoacid: [('r', 4), ('h', 3.5)]:
 ```
 
 - **build_scoring_matrix**
 ```python
-protein_tools('2', '3', 'build_scoring_matrix') -> {'A': {'A': 2, 'C': 3, 'D': 3, ...}, 'C': {'A': 3, 'C': 2, 'D': 3, ...}, ...}
+protein_tools('2', '3', procedure='build_scoring_matrix') -> {'A': {'A': 2, 'C': 3, 'D': 3, ...}, 'C': {'A': 3, 'C': 2, 'D': 3, ...}, ...}
 ```
 
 - **needleman_wunsch**
 ```python
-protein_tools('RAAH', 'ARAH', 'needleman_wunsch') -> "RAAH, -ARA, final score: 1"
+protein_tools('rh','rhqcqq',procedure='needleman_wunsch', gap_penalty = -2, match_score = 2) -> '----rh, rhqcqq, final score: -2'
 ```
 
 - **calculate_aa_freq**
 ```python
-protein_tools('RAAH', 'calculate_aa_freq') -> {'R': 1, 'A': 2, 'H': 1}
+protein_tools('RAAH', procedure='calculate_aa_freq') -> {'R': 1, 'A': 2, 'H': 1}
 ```
 
 - **convert_to_3L_code**
 ```python
-protein_tools('RAAH', 'convert_to_3L_code') -> "ArgAlaAlaHis"
+protein_tools('RAAH', procedure='convert_to_3L_code') -> "ArgAlaAlaHis"
 ```
 
 - **protein_mass**
 ```python
-protein_tools('RAAH', 'protein_mass') -> 380.4934
+protein_tools('RAAH', procedure='protein_mass') -> 380.4934
 ```
 
 - **translate_protein_rna**
 ```python
-protein_tools('RAAH', 'translate_protein_rna') -> "GACGACGACAUGAC"
+protein_tools('RAAH', procedure='translate_protein_rna') -> "GACGACGACAUGAC"
 ```
 
 ## Tools for FASTQ data filtering
@@ -129,3 +139,7 @@ fastq_filter({'read1': ('ATCG', '!!@#'), 'read2': ('GCTA', '$$%&'), 'read3': ('A
 ```python
 fastq_filter({'read1': ('ATCG', '!!@#'), 'read2': ('GCTA', '$$%&'), 'read3': ('AAAA', '%%%%')}, quality_threshold=10) -> {'read1': ('ATCG', '!!@#'), 'read2': ('GCTA', '$$%&'), 'read3': ('AAAA', '%%%%')}
 ```
+
+
+protein_tools('rh',{'R' : 4,'H' : 3.5},procedure='get_pI')
+"Sequence: rh. Isoelectric point of each aminoacid: [('r', 4), ('h', 3.5)]"
