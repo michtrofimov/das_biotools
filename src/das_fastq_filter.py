@@ -130,10 +130,11 @@ def is_acceptable_quality_score(seq: str, quality_threshold: int) -> bool:
 
 
 def fastq_filter(
-    seqs: dict,
+    input_path: str,
     gc_bounds: tuple = (0, 100),
     length_bounds: tuple = (0, 2**32),
     quality_threshold: int = 0,
+    output_filename: str
 ) -> dict:
     """
     Filter a dictionary of sequences based on specified criteria.
