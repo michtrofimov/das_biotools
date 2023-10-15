@@ -1,3 +1,33 @@
+import os
+from typing import Dict, Tuple
+
+
+def read_fastq_file(input_path: str) -> Dict[str, Tuple[str, str]]:
+    """
+    Read a FASTQ file and return a dictionary where keys are sequence identifiers
+    and values are tuples containing sequence and quality scores.
+
+    Parameters:
+    - input_path (str): Path to the input FASTQ file.
+
+    Returns:
+    - dict: A dictionary with sequence identifiers as keys and tuples (sequence, quality scores) as values.
+    """
+
+    fastq = dict()
+    with open(input_path, "r") as fastq_file:
+        lines = list()
+        for line in fastq_file:
+            lines.append(line.strip())
+            if len(lines) == 4:
+                id = lines[0]
+                (read, qual) = lines[1::2]
+                fastq[id] = (read, qual)
+                lines = list()
+
+    return fastq
+
+
 def calculate_gc_content(seq: str) -> float:
     """
     Calculate a GC content percentage of a DNA sequence.
@@ -40,7 +70,7 @@ def is_acceptable_gc(seq: str, gc_bounds: tuple) -> bool:
     return res
 
 
-def is_acceptable_length(seq: str, length_bounds: tuple) -> bool:
+def is_acceptable_length(seq: str, length_bounds: Tuple[int, int]) -> bool:
     """
     Check if the length of a sequence falls within specified bounds.
 
@@ -131,15 +161,17 @@ def is_acceptable_quality_score(seq: str, quality_threshold: int) -> bool:
 
 def fastq_filter(
     input_path: str,
+    output_filename: str = None,
     gc_bounds: tuple = (0, 100),
     length_bounds: tuple = (0, 2**32),
     quality_threshold: int = 0,
-    output_filename: str
 ) -> dict:
     """
-    Filter a dictionary of sequences based on specified criteria.
+    Filter a dictionary of sequences based on specified criteria and write filtered dictionary in a FASTQ format.
 
     Parameters:
+    - input_path (str): Path to the input FASTQ file
+    - output_filename (str): Name of the output FASTQ file. If None, the base name of the input file is used
     - seqs (dict): dictionary where keys are sequence identifiers and values are tuples containing sequence and quality scores
     - gc_bounds (tuple): tuple with lower and upper bounds for GC content
     - length_bounds (tuple): tuple with lower and upper bounds for sequence length
@@ -148,6 +180,9 @@ def fastq_filter(
     Returns:
     - dict: filtered dictionary containing only the sequences that meet the specified criteria
     """
+
+    # fastq file to fastq dict
+    fastq = read_fastq_file(input_path)
 
     # Check value of gc_bounds parameter
     if type(gc_bounds) == int:
@@ -175,19 +210,21 @@ def fastq_filter(
     if type(quality_threshold) != int:
         return "Error! Input integer value!"
 
-    reads_to_del = []
+    ids_to_del = []
 
-    for read in seqs.keys():
-        seq = seqs[read][0]
-        quality = seqs[read][1]
+    for id in fastq.keys():
+        seq = fastq[id][0]
+        quality = fastq[id][1]
 
         if (
             (not is_acceptable_gc(seq, gc_bounds))
             or (not is_acceptable_length(seq, length_bounds))
             or (not is_acceptable_quality_score(quality, quality_threshold))
         ):
-            reads_to_del.append(read)
-    for read in reads_to_del:
-        del seqs[read]
+            ids_to_del.append(id)
+    for id in ids_to_del:
+        del fastq[id]
 
-    return seqs
+    write_fastq_file(fastq, input_path, output_filename)
+
+    return fastq
