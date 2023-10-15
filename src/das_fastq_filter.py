@@ -159,6 +159,36 @@ def is_acceptable_quality_score(seq: str, quality_threshold: int) -> bool:
     return res
 
 
+def write_fastq_file(
+    fastq: Dict[str, Tuple[str, str]],
+    input_path: str,
+    output_filename: str = None,
+):
+    """
+    Write a dictionary of sequences to a new FASTQ file.
+
+    Parameters:
+    - fastq (dict): Dictionary where keys are sequence identifiers and values are tuples containing sequence and quality scores.
+    - input_path (str): Path to the input FASTQ file.
+    - output_filename (str): Name of the output FASTQ file. If None, the base name of the input file is used.
+    """
+
+    if output_filename is None:
+        output_filename = os.path.basename(input_path)
+
+    data_dir = os.path.join(os.path.dirname(input_path), "fastq_filtrator_results")
+
+    if not os.path.isdir(data_dir):
+        os.mkdir(data_dir)
+
+    with open(os.path.join(data_dir, output_filename), "w") as new_fastq:
+        for key, item in fastq.items():
+            new_fastq.write(key + "\n")
+            new_fastq.write(item[0] + "\n")
+            new_fastq.write("+" + key[1:] + "\n")
+            new_fastq.write(item[1] + "\n")
+
+
 def fastq_filter(
     input_path: str,
     output_filename: str = None,
