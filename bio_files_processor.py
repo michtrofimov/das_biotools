@@ -49,6 +49,11 @@ def convert_multiline_fasta_to_oneline(input_fasta: str, output_fasta: str = Non
             fasta_file.write(value + "\n")
 
 
+import os
+from pathlib import Path
+from typing import List
+
+
 def select_genes_from_gbk_to_fasta(
     input_gbk: str,
     genes: List[str],
@@ -85,71 +90,111 @@ def select_genes_from_gbk_to_fasta(
         for line_raw in gbk_file:
             line = line_raw.strip().split()
 
-            cds_in_line = any("CDS" in word for word in line)
+            # Check if the line contains "CDS"
+            cds_in_line = [wrd for wrd in line if "CDS" in wrd]
             if cds_in_line:
-                matching_gene = [word for word in line if ("/gene=" in word)]
+                # Make new variable line_gene to not overwrite line
+                line_gene = line
 
+                # Check if the line contains "/gene="
+                matching_gene = [wrd for wrd in line_gene if "/gene=" in wrd]
+
+                # While we do not find line with "/gene=" loop through lines.
                 while not matching_gene:
-                    line = next(gbk_file).strip().split()
-                    matching_gene = [word for word in line if ("/gene=" in word)]
+                    line_gene = next(gbk_file).strip().split()
+                    matching_gene = [wrd for wrd in line_gene if "/gene=" in wrd]
 
+                    # Find "/locus_tag" if there is no "/gene" in the "CDS"
+                    # Exit loop and enter elif condition
                     locus_in_line_gene = [
-                        word for word in line if ("/locus_tag=" in word)
+                        wrd for wrd in line_gene if "/locus_tag=" in wrd
                     ]
                     if locus_in_line_gene:
                         break
-
                 if matching_gene:
-                    current_gene = "".join(
-                        map(
-                            str,
-                            [word.split("=")[1].strip('""') for word in matching_gene],
-                        )
-                    )
-                    current_seq = ""
+                    # Save gene name
+                    current_gene = [
+                        chr.split("=")[1].strip('""') for chr in matching_gene
+                    ]
 
-                    while not current_seq.strip().endswith(('"')):
-                        current_seq += line_raw.strip()
-                        line_raw = next(gbk_file).strip()
+                    # Make new variables, so our while loop would not overwrite variable line_raw
+                    line_seq_strip = line_raw.strip()
+                    line_seq = line_raw.strip().split()
 
-                    current_seq = current_seq.strip().split("=")[1].strip('""')
-                    features[current_gene] = current_seq
+                    # Find the translation
+                    while not [wrd for wrd in line_seq if "/translation=" in wrd]:
+                        line_seq_raw = next(gbk_file)
+                        line_seq_strip = line_seq_raw.strip()
+                        line_seq = line_seq_raw.strip().split()
+                    else:
+                        if line_seq_strip.endswith('"'):
+                            matching_seq = [
+                                wrd for wrd in line_seq if "/translation=" in wrd
+                            ]
+                            current_seq = [
+                                chr.split("=")[1].strip('""') for chr in matching_seq
+                            ]
 
+                        elif not line_seq_strip.endswith('"'):
+                            while not line_seq_strip.endswith('"'):
+                                line_seq_strip = next(gbk_file).strip()
+                                current_seq += line_seq_strip
+
+                        current_gene = "".join(map(str, current_gene))
+                        current_seq = "".join(map(str, current_seq))
+                        features[current_gene] = current_seq
+
+                # Condition for "/locus_tag="
                 elif locus_in_line_gene:
-                    current_gene = "".join(
-                        map(
-                            str,
-                            [
-                                word.split("=")[1].strip('""')
-                                for word in locus_in_line_gene
-                            ],
-                        )
-                    )
-                    current_seq = ""
+                    current_gene = [
+                        chr.split("=")[1].strip('""') for chr in locus_in_line_gene
+                    ]
 
-                    while not current_seq.strip().endswith(('"')):
-                        current_seq += line_raw.strip()
-                        line_raw = next(gbk_file).strip()
+                    # Make new variables, so our while loop would not overwrite variable line_raw
+                    line_seq_raw = line_raw.strip()
+                    line_seq = line_raw.strip().split()
 
-                    current_seq = current_seq.strip().split("=")[1].strip('""')
-                    features[current_gene] = current_seq
+                    # Find the translation
+                    while not [wrd for wrd in line_seq if "/translation=" in wrd]:
+                        line_seq_raw = next(gbk_file)
+                        line_seq_strip = line_seq_raw.strip()
+                        line_seq = line_seq_raw.strip().split()
+                    else:
+                        if line_seq_strip.strip().endswith('"'):
+                            matching_seq = [
+                                wrd for wrd in line_seq if "/translation=" in wrd
+                            ]
+                            current_seq = [
+                                chr.split("=")[1].strip('""') for chr in matching_seq
+                            ]
+
+                        elif not line_seq_strip.strip().endswith('"'):
+                            while not line_seq_strip.strip().endswith('"'):
+                                line_seq_strip = next(gbk_file).strip()
+                                current_seq += line_seq_strip
+
+                        current_gene = "".join(map(str, current_gene))
+                        current_seq = "".join(map(str, current_seq))
+                        features[current_gene] = current_seq
 
     # Extract neighboring genes
     for gene in genes:
-        for i, (gene_key, seq_val) in enumerate(features.items()):
-            if gene in gene_key:
+        for i, k in enumerate(features.keys()):
+            if gene in k:
                 for j in range(n_before):
                     if i - (j + 1) >= 0:
+                        gene_key, seq_val = list(features.items())[i - (j + 1)]
                         neighbours_before[gene_key] = seq_val
                 for j in range(n_after):
-                    if i + (j + 1) < len(features):
+                    if i + (j + 1) < len(features):  # Fix off-by-one error
+                        gene_key, seq_val = list(features.items())[i + (j + 1)]
                         neighbours_after[gene_key] = seq_val
 
     # Determine the output FASTA file path
     if output_fasta is None:
         fasta_dir = os.path.dirname(input_gbk)
         output_fasta = (
-            Path(input_gbk).with_suffix("").stem + "flanking_genes" + ".fasta"
+            Path(input_gbk).with_suffix("").stem + "_flanking_genes" + ".fasta"
         )
     fasta_path = os.path.join(fasta_dir, output_fasta)
 
