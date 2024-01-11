@@ -5,8 +5,16 @@
 
 Das biotools is a homework project made during studies in Bioinformatics institute by Michil Trofimov in September 2023.
 
-It is a python library which is able to perform several procedures on DNA/RNA, protein sequences and filter through FASTQ data.
+It is a python library which is able to perform several procedures on DNA/RNA, protein sequences, filter through FASTQ data, convert multi-line FASTA to single-line FASTA and extract features from .gbk file.
 
+# Installation
+```bash
+git clone git@github.com:michtrofimov/das_biotools.git
+```
+
+```bash
+cd das_biotools
+```
 # Features
 
 Tools for nucleotide sequences and aminoacids sequences support upper and lower cases.
@@ -140,6 +148,26 @@ fastq_filter({'read1': ('ATCG', '!!@#'), 'read2': ('GCTA', '$$%&'), 'read3': ('A
 fastq_filter({'read1': ('ATCG', '!!@#'), 'read2': ('GCTA', '$$%&'), 'read3': ('AAAA', '%%%%')}, quality_threshold=10) -> {'read1': ('ATCG', '!!@#'), 'read2': ('GCTA', '$$%&'), 'read3': ('AAAA', '%%%%')}
 ```
 
+## Tools for bio-files processing
 
-protein_tools('rh',{'R' : 4,'H' : 3.5},procedure='get_pI')
-"Sequence: rh. Isoelectric point of each aminoacid: [('r', 4), ('h', 3.5)]"
+- `convert_multiline_fasta_to_oneline(input_fasta: str, output_fasta: str = None)`: Convert a multi-line FASTA file to a one-line FASTA file.
+
+- `def select_genes_from_gbk_to_fasta(
+    input_gbk: str,
+    genes: List[str],
+    n_before: int = 1,
+    n_after: int = 1,
+    output_fasta: str = None,
+):`: Extracts gene sequences from a GenBank (gbk) file and creates a FASTA file with specified neighboring genes.
+
+### Usage
+
+- **convert_multiline_fasta_to_oneline**
+```python
+convert_multiline_fasta_to_oneline('example_multiline_fasta.fasta') -> "example_multiline_fasta_converted.fasta"
+```
+
+- **select_genes_from_gbk_to_fasta**
+```python
+select_genes_from_gbk_to_fasta('example_gbk.gbk', 'flu_2', n_before = 2, n_after = 3) -> "example_gbk_flanking_genes.fasta"
+```
