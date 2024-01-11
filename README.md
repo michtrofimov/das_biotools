@@ -1,7 +1,7 @@
 <img width="642" alt="Screenshot 2023-10-05 at 23 18 54" src="https://github.com/michtrofimov/das_biotools/assets/92677906/4410efa3-83fd-4a89-8ee7-6c6b6baa5805">
 
 # DAS BIOTOOLS
-> The great and terrifying successor of biopython
+"The great and terrifying successor of biopython"
 
 Das biotools is a homework project made during studies in Bioinformatics institute by Michil Trofimov in September 2023.
 
