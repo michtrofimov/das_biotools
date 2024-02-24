@@ -204,7 +204,3 @@ def select_genes_from_gbk_to_fasta(
             fasta_file.write(f">{gene}\n{sequence}\n")
         for gene, sequence in neighbours_after.items():
             fasta_file.write(f">{gene}\n{sequence}\n")
-
-
-# Example usage
-select_genes_from_gbk_to_fasta("tests/example_gbk.gbk", "flu_2", n_before=2)
