@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "das-biotools"
+version = "0.1.0"
+description = "Official git repository for Das biotools"
+authors = ["Michil Trofimov <trofimov.michil@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+bs4 = "^0.0.2"
+pytest = "^8.2.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
