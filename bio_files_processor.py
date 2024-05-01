@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import List
 
 
-# HW 6
 def convert_multiline_fasta_to_oneline(input_fasta: str, output_fasta: str = None):
     """
     Convert a multi-line FASTA file to a one-line FASTA file.
@@ -17,6 +16,7 @@ def convert_multiline_fasta_to_oneline(input_fasta: str, output_fasta: str = Non
     Returns:
     - FASTA file
     """
+    # Dictionary to store fasta sequences
     fasta = dict()
 
     # Read the input multi-line FASTA file
@@ -72,6 +72,7 @@ def select_genes_from_gbk_to_fasta(
     Returns:
     - FASTA file
     """
+    # Dictionaries to store neighboring genes and features
     neighbours_before = dict()
     neighbours_after = dict()
     features = dict()
@@ -203,7 +204,6 @@ def select_genes_from_gbk_to_fasta(
             fasta_file.write(f">{gene}\n{sequence}\n")
 
 
-# HW 15
 @dataclass
 class FastaRecord:
     id: str  # Unique identifier for the sequence
@@ -217,7 +217,6 @@ class FastaRecord:
         )
 
 
-# Class to handle opening and iterating over FASTA files
 class OpenFasta:
     def __init__(self, file_path: str):
         """

@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-
 import os
 import sys
 import datetime
@@ -16,6 +15,13 @@ TG_API_TOKEN = os.getenv("TG_API_TOKEN")
 
 # HW 14
 class BiologicalSequence(ABC):
+    """
+    Abstract base class representing a biological sequence.
+
+    Attributes:
+        sequence (str): The biological sequence.
+    """
+
     @abstractmethod
     def __init__(self, sequence):
         pass
@@ -42,6 +48,13 @@ class BiologicalSequence(ABC):
 
 
 class NucleicAcid(BiologicalSequence):
+    """
+    Represents a nucleic acid sequence.
+
+    Attributes:
+        sequence (str): The nucleic acid sequence.
+    """
+
     def __init__(self, sequence):
         self.sequence = sequence
 
@@ -58,6 +71,12 @@ class NucleicAcid(BiologicalSequence):
         return self.sequence
 
     def is_valid_alphabet(self):
+        """
+        Check if the sequence contains valid nucleotide alphabet.
+
+        Returns:
+            bool: True if the sequence contains valid nucleotides, False otherwise.
+        """
         alphabet = type(self).ALPHABET
         if set(self.sequence).issubset(alphabet):
             return True
@@ -65,6 +84,12 @@ class NucleicAcid(BiologicalSequence):
             return False
 
     def complement(self):
+        """
+        Generate the complementary sequence.
+
+        Returns:
+            NucleicAcid: The complementary sequence.
+        """
         if type(self) == NucleicAcid:
             raise NotImplementedError("Cannot complement NucleicAcid instance")
 
@@ -74,6 +99,12 @@ class NucleicAcid(BiologicalSequence):
         return type(self)(comp_seq)
 
     def gc_content(self):
+        """
+        Calculate the GC content of the sequence.
+
+        Returns:
+            float: The GC content percentage.
+        """
         if type(self) == NucleicAcid:
             raise NotImplementedError("Cannot gc_content NucleicAcid instance")
         gc_count = sum([1 for base in self.sequence if base in ["C", "G"]])
@@ -83,21 +114,48 @@ class NucleicAcid(BiologicalSequence):
 
 
 class DNASequence(NucleicAcid):
+    """
+    Represents a DNA sequence.
+
+    Attributes:
+        sequence (str): The DNA sequence.
+    """
+
     ALPHABET = set("ATGC")
     MAP = {"A": "T", "T": "A", "C": "G", "G": "C"}
 
     def transcribe(self):
+        """
+        Transcribe the DNA sequence into RNA.
+
+        Returns:
+            RNASequence: The transcribed RNA sequence.
+        """
         transcribed = self.sequence.replace("T", "U")
 
         return RNASequence(transcribed)
 
 
 class RNASequence(NucleicAcid):
+    """
+    Represents an RNA sequence.
+
+    Attributes:
+        sequence (str): The RNA sequence.
+    """
+
     ALPHABET = set("AUGC")
     MAP = {"A": "U", "U": "A", "C": "G", "G": "C"}
 
 
 class AminoAcidSequence(BiologicalSequence):
+    """
+    Represents an amino acid sequence.
+
+    Attributes:
+        sequence (str): The amino acid sequence.
+    """
+
     ALPHABET = set("ACDEFGHIKLMNPQRSTVWY")
 
     def __init__(self, sequence):
@@ -116,32 +174,30 @@ class AminoAcidSequence(BiologicalSequence):
         return self.sequence
 
     def is_valid_alphabet(self):
+        """
+        Check if the sequence contains valid amino acid alphabet.
+
+        Returns:
+            bool: True if the sequence contains valid amino acids, False otherwise.
+        """
         alphabet = type(self).ALPHABET
         if set(self.sequence).issubset(alphabet):
             return True
         else:
             return False
 
-    amino_acid_frequency = {}
-
     def calculate_aa_freq(self):
         """
-        Calculates the frequency of each amino acid in a protein sequence or sequences.
+        Calculate the frequency of each amino acid in the sequence.
 
-        :param sequences: protein sequence or sequences
-        :type sequences: str or list of str
-        :return: dictionary with the frequency of each amino acid
-        :rtype: dict
+        Returns:
+            dict: Dictionary with the frequency of each amino acid.
         """
-
-        # Creating a dictionary with aminoacid frequencies:
         amino_acid_frequency = {}
 
         for amino_acid in self.sequence:
-            # If the aminoacid has been already in:
             if amino_acid in amino_acid_frequency:
                 amino_acid_frequency[amino_acid] += 1
-            # If the aminoacid hasn't been already in:
             else:
                 amino_acid_frequency[amino_acid] = 1
 
@@ -149,14 +205,21 @@ class AminoAcidSequence(BiologicalSequence):
 
 
 # HW 17
-
-
 def telegram_logger(chat_id):
+    """
+    Decorator function to log function execution to Telegram.
+
+    Args:
+        chat_id (str): The chat ID for sending the logs.
+
+    Returns:
+        function: Decorated function with logging capabilities.
+    """
+
     def decorator(func):
         def wrapper(*args, **kwargs):
             default_stdout = sys.stdout
             default_stderr = sys.stderr
-            # Redirect stdout and stderr to StringIO
             stdout_stderr_file = io.StringIO()
             sys.stdout = sys.stderr = stdout_stderr_file
 
@@ -185,7 +248,6 @@ def telegram_logger(chat_id):
                 )
                 raise
             finally:
-                # Reset stdout and stderr
                 sys.stdout = default_stdout
                 sys.stderr = default_stderr
 
@@ -195,10 +257,17 @@ def telegram_logger(chat_id):
 
 
 def send_telegram_message(chat_id, message, stdout="", good_function=None):
+    """
+    Send message to Telegram.
+
+    Args:
+        chat_id (str): The chat ID for sending the message.
+        message (str): The message content.
+        stdout (str, optional): The stdout content to be sent as a file. Defaults to "".
+        good_function (bool, optional): Flag indicating if the function execution was successful. Defaults to None.
+    """
     url = f"https://api.telegram.org/bot{TG_API_TOKEN}/sendDocument"
-
     params = {"chat_id": chat_id, "caption": message, "parse_mode": "Markdown"}
-
     files = {}
     if stdout:
         if good_function:
