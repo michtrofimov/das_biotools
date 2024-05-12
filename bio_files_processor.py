@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import os
 from pathlib import Path
 from typing import List
@@ -15,6 +16,7 @@ def convert_multiline_fasta_to_oneline(input_fasta: str, output_fasta: str = Non
     Returns:
     - FASTA file
     """
+    # Dictionary to store fasta sequences
     fasta = dict()
 
     # Read the input multi-line FASTA file
@@ -49,11 +51,6 @@ def convert_multiline_fasta_to_oneline(input_fasta: str, output_fasta: str = Non
             fasta_file.write(value + "\n")
 
 
-import os
-from pathlib import Path
-from typing import List
-
-
 def select_genes_from_gbk_to_fasta(
     input_gbk: str,
     genes: List[str],
@@ -75,6 +72,7 @@ def select_genes_from_gbk_to_fasta(
     Returns:
     - FASTA file
     """
+    # Dictionaries to store neighboring genes and features
     neighbours_before = dict()
     neighbours_after = dict()
     features = dict()
@@ -196,6 +194,7 @@ def select_genes_from_gbk_to_fasta(
         output_fasta = (
             Path(input_gbk).with_suffix("").stem + "_flanking_genes" + ".fasta"
         )
+    fasta_dir = os.path.dirname(input_gbk)
     fasta_path = os.path.join(fasta_dir, output_fasta)
 
     # Write the extracted sequences to the output FASTA file
@@ -204,3 +203,84 @@ def select_genes_from_gbk_to_fasta(
             fasta_file.write(f">{gene}\n{sequence}\n")
         for gene, sequence in neighbours_after.items():
             fasta_file.write(f">{gene}\n{sequence}\n")
+
+
+@dataclass
+class FastaRecord:
+    id: str  # Unique identifier for the sequence
+    seq: str  # The actual DNA or protein sequence
+    description: str  # Description associated with the sequence (optional)
+
+    # Define a custom string representation for the FastaRecord object
+    def __repr__(self):
+        return (
+            f"ID: {self.id},\n Description: {self.description},\n Sequence:{self.seq}\n"
+        )
+
+
+class OpenFasta:
+    def __init__(self, file_path: str):
+        """
+        Initialize an OpenFasta object with the file path.
+
+        Args:
+            file_path (str): Path to the FASTA file.
+        """
+        self.file_path = file_path
+        self.current_record: str = None  # Stores the current FASTA header line
+        self.header = None  # Flag to indicate if currently processing header
+        self.stop = False  # Flag to indicate end of file
+
+    # Context manager support for using OpenFasta with `with` statement
+    def __enter__(self):
+        self.handler = open(self.file_path)
+        return self
+
+    # Define the iterator protocol for OpenFasta
+    def __iter__(self):
+        return self
+
+    # Generator function to yield FastaRecord objects one by one
+    def __next__(self):
+        seq = ""
+        header = self.header
+        stop = self.stop
+        current_record = self.current_record
+
+        if stop:
+            raise StopIteration("End of file")
+
+        # Process existing record if available
+        elif current_record is not None:
+            line = current_record
+            id, description = line.split(" ", 1)  # Split header line by first space
+            header = True
+
+        # Read and process a new record if no current record
+        elif header is None:
+            line = self.handler.readline().strip()
+            id, description = line.split(" ", 1)  # Split header line by first space
+            header = True
+
+        # Read sequence lines until next header or end of file
+        while header and not stop:
+            line = self.handler.readline().strip()
+            if line == "":
+                self.stop = True
+                return FastaRecord(id, seq, description)
+            elif line[0] == ">":
+                self.current_record = line
+                return FastaRecord(id, seq, description)
+            else:
+                seq += line
+
+    # Provide convenience methods to read single or all records
+    def read_record(self):
+        return self.__next__()
+
+    def read_records(self):
+        return list(self.__iter__())
+
+    # Close the file when exiting the context manager
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.handler.close()

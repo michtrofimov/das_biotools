@@ -1,0 +1,12 @@
+>Feature sample
+    CDS             123..456
+                    /gene="first"
+                    /translation="ATGCAT"
+>Feature sample
+    CDS             123..456
+                    /gene="sample"
+                    /translation="ATGC"
+>Feature sample2
+    CDS             789..1012
+                    /gene="test"
+                    /translation="ATGCCCC"
