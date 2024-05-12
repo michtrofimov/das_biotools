@@ -11,7 +11,8 @@ DAS BIOTOOLS is a homework project made during python course in Bioinformatics i
 3. Context manager for .fasta files
 4. Telegram logger
 5. Fastq filter
-6. Classes for biological sequences 
+6. .gbk parser
+7. Classes for biological sequences 
 
 # Installation
 ```bash
