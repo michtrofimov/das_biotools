@@ -194,6 +194,7 @@ def select_genes_from_gbk_to_fasta(
         output_fasta = (
             Path(input_gbk).with_suffix("").stem + "_flanking_genes" + ".fasta"
         )
+    fasta_dir = os.path.dirname(input_gbk)
     fasta_path = os.path.join(fasta_dir, output_fasta)
 
     # Write the extracted sequences to the output FASTA file
